@@ -1,0 +1,58 @@
+{
+    "ZmqCameraHelper": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/camera.svg",
+        "uiName": "Zmq Camera Helper",
+        "description": [
+            "Publishes camera images over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "cameraPrim": {
+                "type": "target",
+                "uiName": "Camera Prim",
+                "description": "The camera prim in the stage to capture images from."
+            },
+            "resolution": {
+                "type": "int[2]",
+                "uiName": "Resolution",
+                "default": [1280, 720],
+                "description": "Capture resolution (Width, Height)."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "rgb_image",
+                "description": "ZMQ topic name to publish camera images."
+            },
+            "frameId": {
+                "type": "string",
+                "uiName": "Frame ID",
+                "default": "sim_camera",
+                "description": "Frame ID to include in the published message header."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "ZmqPublishClock": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/clock.svg",
+        "uiName": "Zmq Publish Clock",
+        "description": [
+            "Publish Isaac Sim simulation time to ZMQ topic."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556",
+                "default": "tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "description": "ROS2 topic name.",
+                "default": "clock"
+            },
+            "timeStamp": {
+                "type": "double",
+                "uiName": "Time Stamp",
+                "description": "Simulation time in seconds."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publishing the clock message."
+            }
+        }
+    }
+}

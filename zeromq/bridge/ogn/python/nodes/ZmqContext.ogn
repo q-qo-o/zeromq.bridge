@@ -1,0 +1,56 @@
+{
+    "ZmqContext": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/context.svg",
+        "uiName": "Zmq Context",
+        "description": [
+            "ZMQ Context Node to manage the ZMQ connection parameters."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": ["ZeromqBridge"],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Execution trigger input"
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556",
+                "default": "tcp://*:25556"
+            },
+            "subAddress": {
+                "type": "string",
+                "uiName": "Subscribe Address",
+                "description": "ZMQ SUB address, e.g. tcp://127.0.0.1:25557",
+                "default": "tcp://127.0.0.1:25557"
+            },
+            "lingerMs": {
+                "type": "int",
+                "uiName": "Linger Time (ms)",
+                "description": "ZMQ socket linger time in milliseconds. Higher values ensure graceful shutdown.",
+                "default": 100
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Execution trigger output"
+            },
+            "outPubAddress": {
+                "type": "string",
+                "uiName": "Output Publish Address",
+                "description": "Output ZMQ PUB address for other nodes to use."
+            
+            },
+            "outSubAddress": {
+                "type": "string",
+                "uiName": "Output Subscribe Address",
+                "description": "Output ZMQ SUB address for other nodes to use."
+            }
+        }
+    }
+}

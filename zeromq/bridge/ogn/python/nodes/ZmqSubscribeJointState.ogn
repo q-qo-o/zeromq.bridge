@@ -1,0 +1,52 @@
+{
+    "ZmqSubscribeJointState": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/joint.svg",
+        "uiName": "Zmq Subscribe Joint State",
+        "description": ["Subscribe Isaac Sim joint state from ZMQ topic."],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": ["ZeromqBridge"],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the subscribe signal."
+            },
+            "subAddress": {
+                "type": "string",
+                "uiName": "Subscribe Address",
+                "description": "ZMQ SUB address, e.g. tcp://127.0.0.1:25557",
+                "default": "tcp://127.0.0.1:25557"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "description": "ZMQ topic name.",
+                "default": "joint_states"
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after receiving a new message."
+            },
+            "jointNames": {
+                "type": "token[]",
+                "uiName": "Joint Names",
+                "description": "List of joint names."
+            },
+            "jointPositions": {
+                "type": "double[]",
+                "uiName": "Joint Positions",
+                "description": "List of joint positions."
+            },
+            "jointVelocities": {
+                "type": "double[]",
+                "uiName": "Joint Velocities",
+                "description": "List of joint velocities."
+            }
+        }
+    }
+}

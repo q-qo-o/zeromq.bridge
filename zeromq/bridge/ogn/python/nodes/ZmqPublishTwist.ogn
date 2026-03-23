@@ -1,0 +1,49 @@
+{
+    "ZmqPublishTwist": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/twist.svg",
+        "uiName": "Zmq Publish Twist",
+        "description": ["Publish Isaac Sim Twist (velocity) to ZMQ topic."],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": ["ZeromqBridge"],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556",
+                "default": "tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "description": "ZMQ topic name.",
+                "default": "cmd_vel"
+            },
+            "linearVelocity": {
+                "type": "double[3]",
+                "uiName": "Linear Velocity",
+                "description": "Linear velocity (x, y, z).",
+                "default": [0.0, 0.0, 0.0]
+            },
+            "angularVelocity": {
+                "type": "double[3]",
+                "uiName": "Angular Velocity",
+                "description": "Angular velocity (x, y, z).",
+                "default": [0.0, 0.0, 0.0]
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

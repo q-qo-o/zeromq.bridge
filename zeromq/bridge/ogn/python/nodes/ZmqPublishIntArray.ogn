@@ -1,0 +1,46 @@
+{
+    "ZmqPublishIntArray": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/bridge.svg",
+        "uiName": "Zmq Publish Int Array",
+        "description": [
+            "Publishes an int array over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "int_array_topic",
+                "description": "ZMQ topic name."
+            },
+            "data": {
+                "type": "int[]",
+                "uiName": "Data",
+                "description": "Int array to publish."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

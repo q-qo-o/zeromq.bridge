@@ -1,0 +1,52 @@
+{
+    "ZmqImuHelper": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/imu.svg",
+        "uiName": "Zmq Imu Helper",
+        "description": [
+            "Publishes IMU sensor data over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "imuPrim": {
+                "type": "target",
+                "uiName": "IMU Prim",
+                "description": "The IMU sensor prim in the stage to capture data from."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "imu_data",
+                "description": "ZMQ topic name to publish IMU data."
+            },
+            "frameId": {
+                "type": "string",
+                "uiName": "Frame ID",
+                "default": "imu_frame",
+                "description": "Frame ID to include in the published message header."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

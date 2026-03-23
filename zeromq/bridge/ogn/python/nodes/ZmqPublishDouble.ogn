@@ -1,0 +1,46 @@
+{
+    "ZmqPublishDouble": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/bridge.svg",
+        "uiName": "Zmq Publish Double",
+        "description": [
+            "Publishes a single double value over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "double_topic",
+                "description": "ZMQ topic name."
+            },
+            "data": {
+                "type": "double",
+                "uiName": "Data",
+                "description": "Double value to publish."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

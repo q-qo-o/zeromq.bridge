@@ -1,0 +1,46 @@
+{
+    "ZmqSubscribeFloatArray": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/bridge.svg",
+        "uiName": "Zmq Subscribe Float Array",
+        "description": [
+            "Subscribes to a float array over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the subscribe step."
+            },
+            "subAddress": {
+                "type": "string",
+                "uiName": "Subscribe Address",
+                "default": "tcp://127.0.0.1:25557",
+                "description": "ZMQ SUB address, e.g. tcp://127.0.0.1:25557"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "float_array_topic",
+                "description": "ZMQ topic name."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after receiving data."
+            },
+            "data": {
+                "type": "float[]",
+                "uiName": "Data",
+                "description": "Received float array."
+            }
+        }
+    }
+}

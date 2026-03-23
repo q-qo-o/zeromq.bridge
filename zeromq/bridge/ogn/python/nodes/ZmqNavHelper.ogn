@@ -1,0 +1,70 @@
+{
+    "ZmqNavHelper": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/nav.svg",
+        "uiName": "Zmq Nav Helper",
+        "description": [
+            "Publishes navigation/GPS data over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "targetPrim": {
+                "type": "target",
+                "uiName": "Target Prim",
+                "description": "The prim to track (e.g. vehicle base_link)."
+            },
+            "originLatitude": {
+                "type": "double",
+                "uiName": "Origin Latitude",
+                "default": 0.0,
+                "description": "Latitude of the world origin (0,0,0) in degrees."
+            },
+            "originLongitude": {
+                "type": "double",
+                "uiName": "Origin Longitude",
+                "default": 0.0,
+                "description": "Longitude of the world origin (0,0,0) in degrees."
+            },
+            "originAltitude": {
+                "type": "double",
+                "uiName": "Origin Altitude",
+                "default": 0.0,
+                "description": "Altitude of the world origin (0,0,0) in meters."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "gps_fix",
+                "description": "ZMQ topic name to publish GPS data."
+            },
+            "frameId": {
+                "type": "string",
+                "uiName": "Frame ID",
+                "default": "gps_frame",
+                "description": "Frame ID to include in the published message header."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

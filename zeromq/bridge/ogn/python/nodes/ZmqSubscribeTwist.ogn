@@ -1,0 +1,49 @@
+{
+    "ZmqSubscribeTwist": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/twist.svg",
+        "uiName": "Zmq Subscribe Twist",
+        "description": ["Subscribe Isaac Sim Twist (velocity) from ZMQ topic."],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": ["ZeromqBridge"],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the subscribe signal."
+            },
+            "subAddress": {
+                "type": "string",
+                "uiName": "Subscribe Address",
+                "description": "ZMQ SUB address.",
+                "default": "tcp://127.0.0.1:25557"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "description": "ZMQ topic name.",
+                "default": "cmd_vel"
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after receiving a new message."
+            },
+            "linearVelocity": {
+                "type": "double[3]",
+                "uiName": "Linear Velocity",
+                "description": "Linear velocity (x, y, z).",
+                "default": [0.0, 0.0, 0.0]
+            },
+            "angularVelocity": {
+                "type": "double[3]",
+                "uiName": "Angular Velocity",
+                "description": "Angular velocity (x, y, z).",
+                "default": [0.0, 0.0, 0.0]
+            }
+        }
+    }
+}

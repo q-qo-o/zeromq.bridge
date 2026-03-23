@@ -1,0 +1,58 @@
+{
+    "ZmqOdometryHelper": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/nav.svg",
+        "uiName": "Zmq Odometry Helper",
+        "description": [
+            "Publishes Odometry data (Pose and Twist) over ZMQ."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "targetPrim": {
+                "type": "target",
+                "uiName": "Target Prim",
+                "description": "The rigid body prim to track (e.g. vehicle base_link)."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "odom",
+                "description": "ZMQ topic name to publish Odometry data."
+            },
+            "frameId": {
+                "type": "string",
+                "uiName": "Frame ID",
+                "default": "odom",
+                "description": "Frame ID (parent frame) for the odometry message."
+            },
+            "childFrameId": {
+                "type": "string",
+                "uiName": "Child Frame ID",
+                "default": "base_link",
+                "description": "Child Frame ID for the odometry message."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

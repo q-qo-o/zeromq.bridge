@@ -1,0 +1,52 @@
+{
+    "ZmqPublishJointState": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/joint.svg",
+        "uiName": "Zmq Publish Joint State",
+        "description": ["Publish Isaac Sim joint state to ZMQ topic."],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": ["ZeromqBridge"],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556",
+                "default": "tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "description": "ZMQ topic name.",
+                "default": "joint_states"
+            },
+            "jointNames": {
+                "type": "token[]",
+                "uiName": "Joint Names",
+                "description": "List of joint names."
+            },
+            "jointPositions": {
+                "type": "double[]",
+                "uiName": "Joint Positions",
+                "description": "List of joint positions."
+            },
+            "jointVelocities": {
+                "type": "double[]",
+                "uiName": "Joint Velocities",
+                "description": "List of joint velocities."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}

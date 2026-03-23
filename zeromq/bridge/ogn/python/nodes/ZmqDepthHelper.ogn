@@ -1,0 +1,52 @@
+{
+    "ZmqDepthHelper": {
+        "version": 1,
+        "language": "python",
+        "icon": "icons/depth.svg",
+        "uiName": "Zmq Depth Helper",
+        "description": [
+            "Publishes depth data (distance below water surface) over ZMQ as Float32."
+        ],
+        "categoryDefinitions": "config/CategoryDefinition.json",
+        "categories": [
+            "ZeromqBridge"
+        ],
+        "inputs": {
+            "execIn": {
+                "type": "execution",
+                "uiName": "Exec In",
+                "description": "Trigger the publish signal."
+            },
+            "targetPrim": {
+                "type": "target",
+                "uiName": "Target Prim",
+                "description": "The prim to measure depth for."
+            },
+            "waterSurfaceZ": {
+                "type": "double",
+                "uiName": "Water Surface Z",
+                "default": 0.0,
+                "description": "The Z coordinate (vertical) of the water surface in world frame."
+            },
+            "pubAddress": {
+                "type": "string",
+                "uiName": "Publish Address",
+                "default": "tcp://*:25556",
+                "description": "ZMQ PUB address, e.g. tcp://*:25556"
+            },
+            "topicName": {
+                "type": "string",
+                "uiName": "Topic Name",
+                "default": "depth",
+                "description": "ZMQ topic name to publish depth data."
+            }
+        },
+        "outputs": {
+            "execOut": {
+                "type": "execution",
+                "uiName": "Exec Out",
+                "description": "Signaled after publication completes."
+            }
+        }
+    }
+}
