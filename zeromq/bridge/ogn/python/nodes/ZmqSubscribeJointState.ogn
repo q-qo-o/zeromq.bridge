@@ -1,6 +1,6 @@
 {
     "ZmqSubscribeJointState": {
-        "version": 1,
+        "version": 2,
         "language": "python",
         "icon": "icons/joint.svg",
         "uiName": "Zmq Subscribe Joint State",
@@ -32,19 +32,30 @@
                 "uiName": "Exec Out",
                 "description": "Signaled after receiving a new message."
             },
+            "effortCommand": {
+                "type": "double[]",
+                "uiName": "Effort Command",
+                "description": "List of joint efforts."
+            },
             "jointNames": {
                 "type": "token[]",
                 "uiName": "Joint Names",
                 "description": "List of joint names."
             },
-            "jointPositions": {
+            "positionCommand": {
                 "type": "double[]",
-                "uiName": "Joint Positions",
+                "uiName": "Position Command",
                 "description": "List of joint positions."
             },
-            "jointVelocities": {
+            "timestamp": {
+                "type": "double",
+                "uiName": "Timestamp",
+                "description": "Time of the message.",
+                "default": 0.0
+            },
+            "velocityCommand": {
                 "type": "double[]",
-                "uiName": "Joint Velocities",
+                "uiName": "Velocity Command",
                 "description": "List of joint velocities."
             }
         }

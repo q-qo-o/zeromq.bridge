@@ -3,6 +3,13 @@ import zmq
 import json
 import carb
 import atexit
+import threading
+import time
+
+try:
+    import omni.timeline
+except ImportError:
+    pass
 
 # Default ZMQ addresses
 DEFAULT_PUB_ADDRESS = "tcp://*:25556"
@@ -19,6 +26,9 @@ class ZmqManager:
         self.publishers = {}
         self.subscribers = {}
         self._initialized = False
+        
+        # Thread lock for ZMQ socket operations
+        self.lock = threading.Lock()
         
         # Global addresses configuration
         self.global_pub_address = DEFAULT_PUB_ADDRESS
@@ -46,6 +56,13 @@ class ZmqManager:
             cls._instance.shutdown()
             cls._instance = None
 
+    def _get_current_time(self):
+        """Helper to get simulation time if available, otherwise fallback to system time"""
+        try:
+            return omni.timeline.get_timeline_interface().get_current_time()
+        except Exception:
+            return time.time()
+
     def initialize(self, linger_ms=100, pub_address=None, sub_address=None):
         """Initialize the ZMQ context with proper settings
         
@@ -54,64 +71,65 @@ class ZmqManager:
             pub_address: Global publisher address (optional)
             sub_address: Global subscriber address (optional)
         """
-        if self._initialized:
-            return
-        
-        # Set global addresses if provided
-        if pub_address and pub_address != self.global_pub_address:
-            carb.log_info(f"Global PUB address changed: {self.global_pub_address} -> {pub_address}")
-            self.global_pub_address = pub_address
-        if sub_address and sub_address != self.global_sub_address:
-            carb.log_info(f"Global SUB address changed: {self.global_sub_address} -> {sub_address}")
-            self.global_sub_address = sub_address
+        with self.lock:
+            if self._initialized:
+                return
             
-        # Set context options for graceful shutdown
-        self.context.setsockopt(zmq.LINGER, linger_ms)
-        self._initialized = True
-        carb.log_info(f"ZmqManager initialized - PUB: {self.global_pub_address}, SUB: {self.global_sub_address}")
+            # Set global addresses if provided
+            if pub_address and pub_address != self.global_pub_address:
+                carb.log_info(f"Global PUB address changed: {self.global_pub_address} -> {pub_address}")
+                self.global_pub_address = pub_address
+            if sub_address and sub_address != self.global_sub_address:
+                carb.log_info(f"Global SUB address changed: {self.global_sub_address} -> {sub_address}")
+                self.global_sub_address = sub_address
+                
+            # Set context options for graceful shutdown
+            self.context.setsockopt(zmq.LINGER, linger_ms)
+            self._initialized = True
+            carb.log_info(f"ZmqManager initialized - PUB: {self.global_pub_address}, SUB: {self.global_sub_address}")
 
     def set_global_addresses(self, pub_address, sub_address):
-        """Update global ZMQ addresses at runtime
-        
-        Args:
-            pub_address: Publisher address
-            sub_address: Subscriber address
-        """
-        new_pub_address = pub_address if pub_address else DEFAULT_PUB_ADDRESS
-        new_sub_address = sub_address if sub_address else DEFAULT_SUB_ADDRESS
+        """Update global ZMQ addresses at runtime"""
+        with self.lock:
+            new_pub_address = pub_address if pub_address else DEFAULT_PUB_ADDRESS
+            new_sub_address = sub_address if sub_address else DEFAULT_SUB_ADDRESS
 
-        if new_pub_address != self.global_pub_address:
-            carb.log_info(f"Global PUB address changed: {self.global_pub_address} -> {new_pub_address}")
-        if new_sub_address != self.global_sub_address:
-            carb.log_info(f"Global SUB address changed: {self.global_sub_address} -> {new_sub_address}")
+            if new_pub_address != self.global_pub_address:
+                carb.log_info(f"Global PUB address changed: {self.global_pub_address} -> {new_pub_address}")
+            if new_sub_address != self.global_sub_address:
+                carb.log_info(f"Global SUB address changed: {self.global_sub_address} -> {new_sub_address}")
 
-        self.global_pub_address = new_pub_address
-        self.global_sub_address = new_sub_address
-        carb.log_info(f"Global addresses updated - PUB: {self.global_pub_address}, SUB: {self.global_sub_address}")
+            self.global_pub_address = new_pub_address
+            self.global_sub_address = new_sub_address
+            carb.log_info(f"Global addresses updated - PUB: {self.global_pub_address}, SUB: {self.global_sub_address}")
 
     def get_global_pub_address(self):
-        """Get current global publisher address"""
         return self.global_pub_address
 
     def get_global_sub_address(self):
-        """Get current global subscriber address"""
         return self.global_sub_address
 
     def clear(self):
         """Close all publishers and subscribers"""
-        for pub in self.publishers.values():
-            try:
-                pub.close()
-            except Exception as e:
-                carb.log_warn(f"Error closing publisher: {e}")
-        for sub in self.subscribers.values():
-            try:
-                sub.close()
-            except Exception as e:
-                carb.log_warn(f"Error closing subscriber: {e}")
-        self.publishers = {}
-        self.subscribers = {}
-        carb.log_info("ZmqManager cleared all sockets")
+        with self.lock:
+            for pub in self.publishers.values():
+                try:
+                    pub.close()
+                except Exception as e:
+                    carb.log_warn(f"Error closing publisher: {e}")
+            for sub in self.subscribers.values():
+                try:
+                    sub.close()
+                except Exception as e:
+                    carb.log_warn(f"Error closing subscriber: {e}")
+            self.publishers = {}
+            self.subscribers = {}
+            
+            # Clear caches to avoid memory leaks and ghost subscriptions on hot-reload
+            self.message_buffer.clear()
+            self.subscription_requests.clear()
+            
+            carb.log_info("ZmqManager cleared all sockets and caches")
 
     def shutdown(self):
         """Gracefully shutdown all resources"""
@@ -122,18 +140,15 @@ class ZmqManager:
             carb.log_warn(f"Error terminating context: {e}")
         carb.log_info("ZmqManager shutdown complete")
 
-    def get_publisher(self, address):
-        # Use default address if empty or None
+    def _get_publisher_internal(self, address):
+        # Unlocked internal getter
         if not address or address.strip() == "":
             address = DEFAULT_PUB_ADDRESS
-            carb.log_warn(f"Empty publisher address provided, using default: {address}")
         
         if address not in self.publishers:
             try:
                 pub = self.context.socket(zmq.PUB)
-                # Enable address reuse and set socket options
                 pub.setsockopt(zmq.LINGER, 100)
-                # Don't set SO_REUSEADDR directly on zmq socket, it's handled by ZMQ
                 pub.bind(address)
                 self.publishers[address] = pub
                 carb.log_info(f"Zmq Publisher bound to {address}")
@@ -142,18 +157,17 @@ class ZmqManager:
                 raise
         return self.publishers[address]
 
-    def get_subscriber(self, address):
-        # Use default address if empty or None
+    def _get_subscriber_internal(self, address):
+        # Unlocked internal getter
         if not address or address.strip() == "":
             address = DEFAULT_SUB_ADDRESS
-            carb.log_warn(f"Empty subscriber address provided, using default: {address}")
         
         if address not in self.subscribers:
             try:
                 sub = self.context.socket(zmq.SUB)
                 sub.setsockopt(zmq.LINGER, 100)
                 sub.connect(address)
-                sub.setsockopt(zmq.SUBSCRIBE, b"") # Subscribe to all by default or manage topics?
+                sub.setsockopt(zmq.SUBSCRIBE, b"")
                 self.subscribers[address] = sub
                 carb.log_info(f"Zmq Subscriber connected to {address}")
             except zmq.ZMQError as e:
@@ -161,143 +175,118 @@ class ZmqManager:
                 raise
         return self.subscribers[address]
 
+    def get_publisher(self, address):
+        with self.lock:
+            return self._get_publisher_internal(address)
+
+    def get_subscriber(self, address):
+        with self.lock:
+            return self._get_subscriber_internal(address)
+
     def publish_json(self, address, topic, data):
-        pub = self.get_publisher(address)
-        pub.send_multipart([topic.encode('utf-8'), json.dumps(data).encode('utf-8')])
+        with self.lock:
+            pub = self._get_publisher_internal(address)
+            pub.send_multipart([topic.encode('utf-8'), json.dumps(data).encode('utf-8')])
 
     def publish_image(self, address, topic, image_data, metadata):
-        """
-        image_data: bytes or numpy array buffer
-        metadata: dict with width, height, encoding, etc.
-        """
-        pub = self.get_publisher(address)
-        pub.send_multipart([
-            topic.encode('utf-8'),
-            json.dumps(metadata).encode('utf-8'),
-            image_data
-        ])
+        with self.lock:
+            pub = self._get_publisher_internal(address)
+            pub.send_multipart([
+                topic.encode('utf-8'),
+                json.dumps(metadata).encode('utf-8'),
+                image_data
+            ])
 
     def _spin_socket(self, address):
         """Internal method to flush socket events into buffer"""
-        sub = self.get_subscriber(address)
-        try:
-            # Read all available messages up to a limit to prevent starvation
-            # But here we just poll(0) in a loop
-            while sub.poll(0):
-                parts = sub.recv_multipart()
-                if len(parts) >= 2:
-                    topic_b = parts[0]
-                    data_b = parts[1]
-                    topic = topic_b.decode('utf-8')
-                    try:
-                        data = json.loads(data_b.decode('utf-8'))
-                        # Store in buffer
-                        import time
-                        if address not in self.message_buffer:
-                            self.message_buffer[address] = {}
-                        self.message_buffer[address][topic] = (data, time.time())
-                    except json.JSONDecodeError:
-                        pass
-        except zmq.ZMQError:
-            pass
+        with self.lock:
+            sub = self._get_subscriber_internal(address)
+            try:
+                while sub.poll(0):
+                    parts = sub.recv_multipart()
+                    if len(parts) >= 2:
+                        topic_b = parts[0]
+                        data_b = parts[1]
+                        topic = topic_b.decode('utf-8')
+                        try:
+                            data = json.loads(data_b.decode('utf-8'))
+                            if address not in self.message_buffer:
+                                self.message_buffer[address] = {}
+                            self.message_buffer[address][topic] = (data, self._get_current_time())
+                        except json.JSONDecodeError:
+                            pass
+            except zmq.ZMQError as e:
+                if e.errno != zmq.EAGAIN:
+                    carb.log_warn(f"ZMQ Error during spin on {address}: {e}")
 
     def receive_json(self, address, target_topic=None):
-        # Always spin to update buffer from socket
         self._spin_socket(address)
         
         if not target_topic:
             return None, None, 0.0
             
-        # Retrieve from buffer
-        # Try exact match first
-        if address in self.message_buffer:
-            addr_buffer = self.message_buffer[address]
-            if target_topic in addr_buffer:
-                data, timestamp = addr_buffer[target_topic]
-                return target_topic, data, timestamp
+        with self.lock:
+            if address in self.message_buffer:
+                addr_buffer = self.message_buffer[address]
+                if target_topic in addr_buffer:
+                    data, timestamp = addr_buffer[target_topic]
+                    return target_topic, data, timestamp
             
         return None, None, 0.0
-            # For now, just log if it's not empty, to help debugging. 
-            # Note: This might be spammy, so only enabling if needed or using carb.log_verbose
-            # known_topics = list(addr_buffer.keys())
-            # carb.log_verbose(f"ZmqManager: Requested '{target_topic}' not found. Available: {known_topics}")
-
-        return None, None, 0.0
-    # Convenience methods using global addresses
     
     def publish_json_global(self, topic, data):
-        """Publish JSON data using the global publisher address"""
         return self.publish_json(self.global_pub_address, topic, data)
 
     def publish_image_global(self, topic, image_data, metadata):
-        """Publish image using the global publisher address"""
         return self.publish_image(self.global_pub_address, topic, image_data, metadata)
 
     def receive_json_global(self, target_topic=None):
-        """Receive JSON data using the global subscriber address"""
         return self.receive_json(self.global_sub_address, target_topic)
     
-    # Subscription protocol for ROS2 bridge
-    
     def request_subscription(self, topic_name, msg_type="generic"):
-        """Send subscription request to ROS2 bridge
-        
-        Args:
-            topic_name: ROS2 topic to subscribe to
-            msg_type: Message type hint (e.g., 'Twist', 'JointState', 'generic')
-        
-        This sends a control message to ROS2 bridge requesting it to:
-        1. Subscribe to the specified ROS2 topic
-        2. Forward messages from that topic to ZMQ
-        """
         request_key = f"{topic_name}:{msg_type}"
         
-        # Only send once per topic
-        if request_key in self.subscription_requests:
-            return
-
+        with self.lock:
+            if request_key in self.subscription_requests:
+                return
+            self.subscription_requests.add(request_key)
+            
         carb.log_info(f"New subscription topic requested: {topic_name} ({msg_type})")
         
         try:
-            import time
             control_msg = {
                 "action": "subscribe",
                 "topic": topic_name,
                 "msg_type": msg_type,
-                "timestamp": time.time()
+                "timestamp": self._get_current_time()
             }
             
-            # Send on control topic
+            # Send on control topic (publish_json handles its own lock internally for the send)
+            # However, since publish_json locks, we shouldn't hold lock across the publish call to avoid re-entrance issues
+            # We already released the lock above.
             self.publish_json(self.global_pub_address, CONTROL_TOPIC, control_msg)
-            self.subscription_requests.add(request_key)
-            
             carb.log_info(f"Subscription request sent: topic={topic_name}, type={msg_type}")
             
         except Exception as e:
             carb.log_error(f"Failed to send subscription request for {topic_name}: {e}")
+            with self.lock:
+                self.subscription_requests.discard(request_key)
 
     def unsubscribe_request(self, topic_name):
-        """Send unsubscription request to ROS2 bridge
-        
-        Args:
-            topic_name: ROS2 topic to unsubscribe from
-        """
         try:
-            import time
             control_msg = {
                 "action": "unsubscribe",
                 "topic": topic_name,
-                "timestamp": time.time()
+                "timestamp": self._get_current_time()
             }
             
-            # Send on control topic
             self.publish_json(self.global_pub_address, CONTROL_TOPIC, control_msg)
             
-            # Remove from tracking
-            self.subscription_requests = {
-                req for req in self.subscription_requests 
-                if not req.startswith(f"{topic_name}:")
-            }
+            with self.lock:
+                self.subscription_requests = {
+                    req for req in self.subscription_requests 
+                    if not req.startswith(f"{topic_name}:")
+                }
             
             carb.log_info(f"Unsubscription request sent: topic={topic_name}")
             

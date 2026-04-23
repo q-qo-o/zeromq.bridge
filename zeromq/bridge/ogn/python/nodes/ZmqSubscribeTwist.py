@@ -2,6 +2,12 @@
 from zeromq.bridge.impl.zmq_manager import ZmqManager
 import carb
 
+try:
+    import omni.timeline
+except ImportError:
+    pass
+import time
+
 class ZmqSubscribeTwistInternalState:
     def __init__(self):
         self.mgr = ZmqManager.get_instance()
@@ -12,11 +18,19 @@ class ZmqSubscribeTwistInternalState:
         self.last_topic = ""
         self.subscription_requested = False
         self.last_timestamp = 0.0
+        self.timeout = 0.5  # Watchdog timeout in seconds
 
 class ZmqSubscribeTwist:
     @staticmethod
     def internal_state():
         return ZmqSubscribeTwistInternalState()
+
+    @staticmethod
+    def _get_current_time():
+        try:
+            return omni.timeline.get_timeline_interface().get_current_time()
+        except Exception:
+            return time.time()
 
     @staticmethod
     def compute(db) -> bool:
@@ -40,12 +54,19 @@ class ZmqSubscribeTwist:
             # Non-blocking receive
             recv_topic, data, timestamp = state.mgr.receive_json(address, topic)
             
+            current_time = ZmqSubscribeTwist._get_current_time()
+
             if data and recv_topic == topic and timestamp > state.last_timestamp:
                 state.last_timestamp = timestamp
                 state.last_data = data
                 db.outputs.execOut = db.inputs.execIn
-                # Log success for debugging (optional: could be spammy if frequency is high)
-                # db.log_info(f"Received ZMQ twist on '{topic}': {data}")
+            else:
+                # Watchdog: If we haven't received a new message within timeout, stop movement
+                if current_time - state.last_timestamp > state.timeout:
+                    state.last_data = {
+                        "linear": [0.0, 0.0, 0.0],
+                        "angular": [0.0, 0.0, 0.0]
+                    }
 
             db.outputs.linearVelocity = state.last_data.get("linear", [0.0, 0.0, 0.0])
             db.outputs.angularVelocity = state.last_data.get("angular", [0.0, 0.0, 0.0])

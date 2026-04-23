@@ -1,6 +1,6 @@
 {
     "ZmqPublishJointState": {
-        "version": 1,
+        "version": 2,
         "language": "python",
         "icon": "icons/joint.svg",
         "uiName": "Zmq Publish Joint State",
@@ -19,26 +19,22 @@
                 "description": "ZMQ PUB address, e.g. tcp://*:25556",
                 "default": "tcp://*:25556"
             },
+            "targetPrim": {
+                "type": "target",
+                "uiName": "Target Prim",
+                "description": "The target articulation prim to read joint states from."
+            },
+            "timestamp": {
+                "type": "double",
+                "uiName": "Timestamp",
+                "description": "Time of the message.",
+                "default": 0.0
+            },
             "topicName": {
                 "type": "string",
                 "uiName": "Topic Name",
                 "description": "ZMQ topic name.",
                 "default": "joint_states"
-            },
-            "jointNames": {
-                "type": "token[]",
-                "uiName": "Joint Names",
-                "description": "List of joint names."
-            },
-            "jointPositions": {
-                "type": "double[]",
-                "uiName": "Joint Positions",
-                "description": "List of joint positions."
-            },
-            "jointVelocities": {
-                "type": "double[]",
-                "uiName": "Joint Velocities",
-                "description": "List of joint velocities."
             }
         },
         "outputs": {
