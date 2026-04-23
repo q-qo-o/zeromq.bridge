@@ -255,6 +255,7 @@ class ZmqRos2Bridge(Node):
 				"name": list(msg.name),
 				"position": list(msg.position),
 				"velocity": list(msg.velocity),
+				"effort": list(msg.effort),
 			}
 		return {}
 
@@ -320,6 +321,8 @@ if __name__ == "__main__":
   - `name`: array of string
   - `position`: array of float
   - `velocity`: array of float
+  - `effort`: array of float
+  - `timestamp`: float (simulation time in seconds, present when published by Isaac Sim)
 
 Example:
 
@@ -327,7 +330,9 @@ Example:
 {
 	"name": ["joint1", "joint2"],
 	"position": [0.1, 0.2],
-	"velocity": [0.0, 0.0]
+	"velocity": [0.0, 0.0],
+	"effort": [0.0, 1.5],
+	"timestamp": 123.456
 }
 ```
 
