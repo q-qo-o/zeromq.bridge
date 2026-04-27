@@ -215,7 +215,9 @@ class ZmqManager:
                             data = json.loads(data_b.decode('utf-8'))
                             if address not in self.message_buffer:
                                 self.message_buffer[address] = {}
-                            self.message_buffer[address][topic] = (data, self._get_current_time())
+                            # Use time.time() for network arrival to ensure monotonically increasing 
+                            # timestamps even if simulation timeline is paused
+                            self.message_buffer[address][topic] = (data, time.time())
                         except json.JSONDecodeError:
                             pass
             except zmq.ZMQError as e:
