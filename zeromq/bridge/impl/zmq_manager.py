@@ -40,6 +40,9 @@ class ZmqManager:
         # Buffer for received messages: {address: {topic: (data, timestamp)}}
         self.message_buffer = {}
         
+        # Heartbeat for subscriptions
+        self.last_heartbeat_time = time.time()
+        
         # Register cleanup on exit
         atexit.register(self.shutdown)
 
@@ -219,7 +222,32 @@ class ZmqManager:
                 if e.errno != zmq.EAGAIN:
                     carb.log_warn(f"ZMQ Error during spin on {address}: {e}")
 
+    def _send_subscription_heartbeats(self):
+        with self.lock:
+            requests = list(self.subscription_requests)
+        
+        for req in requests:
+            parts = req.split(':', 1)
+            if len(parts) == 2:
+                topic_name = parts[0]
+                msg_type = parts[1]
+                try:
+                    control_msg = {
+                        "action": "subscribe",
+                        "topic": topic_name,
+                        "msg_type": msg_type,
+                        "timestamp": self._get_current_time()
+                    }
+                    self.publish_json(self.global_pub_address, CONTROL_TOPIC, control_msg)
+                except Exception as e:
+                    pass
+
     def receive_json(self, address, target_topic=None):
+        current_time = time.time()
+        if current_time - self.last_heartbeat_time > 1.0:
+            self.last_heartbeat_time = current_time
+            self._send_subscription_heartbeats()
+            
         self._spin_socket(address)
         
         if not target_topic:
